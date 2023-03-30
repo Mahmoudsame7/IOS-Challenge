@@ -8,11 +8,7 @@
 import UIKit
 
 class ViewController: UIViewController,UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout{
-    
-    
-    
-    
-    
+
     @IBOutlet weak var CollectionView: UICollectionView!;
     
     var result:[String]=[];
@@ -28,14 +24,17 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
         fetchphotos{[weak self] (images) in
             self?.result=images
             //print(images)
+            DispatchQueue.main.async {
+                self?.CollectionView.reloadData()
+             }
         }
         
         CollectionView.dataSource=self
         CollectionView.delegate=self
         
-        DispatchQueue.main.async {
-            self.CollectionView.reloadData()
-         }
+//        DispatchQueue.main.async {
+//            self.CollectionView.reloadData()
+//         }
     }
     
     
