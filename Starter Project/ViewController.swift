@@ -11,19 +11,20 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
 
     @IBOutlet weak var CollectionView: UICollectionView!;
     
-    var result:[String]=[];
     
-    
-    let colorData=[UIColor.blue , UIColor.red , UIColor.green,UIColor.blue , UIColor.red , UIColor.green,UIColor.blue , UIColor.red , UIColor.green , UIColor.green ]
-    
-    
+    var result:[String]=[];  //Hold url of each image
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        //Calling fetchphotos
         fetchphotos{[weak self] (images) in
+            
+            //Assign the data returned by completion handler to result variable to be used by collection view
             self?.result=images
-            //print(images)
+            
+            //Reload the collection view using the main dispatch queue
             DispatchQueue.main.async {
                 self?.CollectionView.reloadData()
              }
@@ -32,12 +33,10 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
         CollectionView.dataSource=self
         CollectionView.delegate=self
         
-//        DispatchQueue.main.async {
-//            self.CollectionView.reloadData()
-//         }
+
     }
     
-    
+    //Make Collection View 2 Columns evenly spaced
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let CV_width=CollectionView.bounds.width;
         
@@ -46,24 +45,27 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
         
         let adjusted_width=CV_width-spacebetweencells;
         
-        let width:CGFloat = adjusted_width/2 - 20;
+        let width:CGFloat = floor(adjusted_width)/2-20;
         let height:CGFloat = 140;
         
         return CGSize(width: width, height: height);
         
     }
+    
+    //Number of cells rendered by collection view
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        
-        print(self.result.count)
-        return self.result.count
+        return result.count
     }
     
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
         let cell = CollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath) as! CustomCollectionViewCell
         
-        //cell.backgroundColor=colorData[indexPath.item]
-        let url = URL(string: self.result[indexPath.item])!
         
+        let url = URL(string: result[indexPath.item])!
+        
+        //Displaying image of each collection view cell
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             
@@ -87,15 +89,11 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
             
         }
         task.resume()
-        
-        
-        
+
         return cell
     }
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        collectionView.deselectItem(at: indexPath, animated: true)
-    }
-    
+        
+    //Passing the clicked image url to ImageViewController in order to be displayed
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         if let id = segue.identifier{
@@ -103,7 +101,7 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
                 let newVC=segue.destination as! ImageViewController
                 
                 //get the index path for the current clicked photo
-                var indexPath=self.CollectionView.indexPath(for: sender as! CustomCollectionViewCell)
+                let indexPath=self.CollectionView.indexPath(for: sender as! CustomCollectionViewCell)
                 
                 let url=self.result[(indexPath!.item)];
                 newVC.url=url;
@@ -113,7 +111,11 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
         
         
     }
+    
+    //fetchphotos used to fetch newly added images to Unsplash API
     func fetchphotos(completionHandler: @escaping ([String]) -> Void){
+        
+        //completion handler expects data of type array of string will hold the url of each fetched image
         
         var res:[String]=[]
         let url = URL(string: "https://api.unsplash.com/photos/?client_id=Ahj-66mbyiRNL-GhTltHoIgGfkznNgv7SALhCOTLMaM")!
@@ -135,21 +137,20 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
             if let data=data{
                 do{
                     let tasks=try decoder.decode([Image].self ,from: data)
+                    
+                    
                     tasks.forEach{ i in
                         res.append(i.urls["small"]!)
                     }
-                    //print(res)
+                    
                     completionHandler(res)
-                    //print(self.result)
+                    
                 }catch{
                     print(error)
                 }
             }
-            
-            
         }
         task.resume()
-        
     }
     
 }

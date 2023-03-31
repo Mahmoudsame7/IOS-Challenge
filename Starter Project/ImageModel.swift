@@ -9,7 +9,5 @@ import Foundation
 
 struct Image:Codable{
     let id:String
-    let created_at:String
     let urls: [String: String]
-    
 }
